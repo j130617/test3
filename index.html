@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style> /* set the CSS */
+  
+body { font: 14px Arial;}  /*font-weight: 300; padding: 20px;}*/
+th { text-align: left; }
+th, td { padding: 1px 4px;}
+/*th, td { padding: 0 1em 0.5ex 0;}*/
+th.center, td.center { text-align: center; }
+th.num, td.num { text-align: center; }
+/*th.num, td.num { text-align: right; }*/
+</style>
+<body>
+
+<!-- load the d3.js library -->    	
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script>
+
+d3.csv("kosten.csv", function(error, data) {
+  if (error) throw error;
+
+  data.forEach(function(d) {
+      d.eur = +d.eur;
+      //return d;
+      
+  });
+ 
+// The table generation function
+var margin = {top: 10, right: 20, bottom: 40, left: 50},
+    width = 500 - margin.left - margin.right,
+    height = 275 - margin.top - margin.bottom;
+    
+function tabulate(data, columns) {
+	var table = d3.select('body').append('table')
+	var thead = table.append('thead')
+	var	tbody = table.append('tbody');
+
+	// append the header row
+	thead.append('tr')
+	  .selectAll('th')
+	  .data(columns).enter()
+	  .append('th')
+	    .text(function (column) { return column; });
+
+	// create a row for each object in the data
+	var rows = tbody.selectAll('tr')
+	  .data(data)
+	  .enter()
+	  .append('tr');
+
+	// create a cell in each row for each column
+	var cells = rows.selectAll('td')
+	  .data(function (row) {
+	    return columns.map(function (column) {
+	      return {column: column, value: row[column]};
+	    });
+	  })
+	  .enter()
+	  .append('td')
+	    .text(function (d) { return d.value; });
+
+  return table;
+}
+
+// render the tables
+tabulate(data, ['date', 'close']); // 2 column table
+tabulate(data, ['date']); // table with only date column
+tabulate(data, ['close']); // table with only close column
