@@ -14,6 +14,7 @@ th.num, td.num { text-align: center; }
 
 <!-- load the d3.js library -->    	
 <script src="https://d3js.org/d3.v4.min.js"></script>
+
 <script>
 
 d3.csv("kosten.csv", function(error, data) {
@@ -31,9 +32,13 @@ var margin = {top: 10, right: 20, bottom: 40, left: 50},
     height = 275 - margin.top - margin.bottom;
     
 function tabulate(data, columns) {
-	var table = d3.select('body').append('table')
-	var thead = table.append('thead')
-	var	tbody = table.append('tbody');
+    var table = d3.select("body").append("table")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .style("border-collapse", "collapse")
+            .style("border", "1px grey solid"),
+        thead = table.append("thead"),
+        tbody = table.append("tbody");
 
 	// append the header row
 	thead.append('tr')
@@ -62,7 +67,16 @@ function tabulate(data, columns) {
   return table;
 }
 
-// render the tables
-tabulate(data, ['date', 'close']); // 2 column table
-tabulate(data, ['date']); // table with only date column
-tabulate(data, ['close']); // table with only close column
+// render the table
+var peopleTable = tabulate(data, ["Jaar", "Euro"]);
+	peopleTable.selectAll("tbody tr") 
+           .sort(function(a, b) {
+             return d3.descending(a.jaar, b.jaar);
+           });
+	peopleTable.selectAll("thead th")
+           .text(function(column) {
+             return column.charAt(0).toUpperCase() + column.substr(1);
+           });
+});
+</script>
+</body>
