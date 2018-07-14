@@ -1,82 +1,90 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
-<style> /* set the CSS */
-  
-body { font: 14px Arial;}  /*font-weight: 300; padding: 20px;}*/
-th { text-align: left; }
-th, td { padding: 1px 4px;}
-/*th, td { padding: 0 1em 0.5ex 0;}*/
-th.center, td.center { text-align: center; }
-/*th.num, td.num { text-align: center; }*/
-th.num, td.num { text-align: right; }
-</style>
-<body>
+<style>
 
-<!-- load the d3.js library -->    	
-<script src="https://d3js.org/d3.v4.min.js"></script>
-
-<script>
-
-d3.csv("kosten.csv", function(error, data) {
-  if (error) throw error;
-
-  data.forEach(function(d) {
-      d.eur = +d.eur;
-      //return d;
-      
-  });
- 
-// The table generation function
-var margin = {top: 10, right: 20, bottom: 40, left: 50},
-    width = 500 - margin.left - margin.right,
-    height = 275 - margin.top - margin.bottom;
-    
-function tabulate(data, columns) {
-    var table = d3.select("body").append("table")
-            .attr("width", width + margin.left + margin.right)
-            .attr("height", height + margin.top + margin.bottom)
-            .style("border-collapse", "collapse")
-            .style("border", "1px grey solid"),
-        thead = table.append("thead"),
-        tbody = table.append("tbody");
-
-	// append the header row
-	thead.append('tr')
-	  .selectAll('th')
-	  .data(columns).enter()
-	  .append('th')
-	    .text(function (column) { return column; });
-
-	// create a row for each object in the data
-	var rows = tbody.selectAll('tr')
-	  .data(data)
-	  .enter()
-	  .append('tr');
-
-	// create a cell in each row for each column
-	var cells = rows.selectAll('td')
-	  .data(function (row) {
-	    return columns.map(function (column) {
-	      return {column: column, value: row[column]};
-	    });
-	  })
-	  .enter()
-	  .append('td')
-	    .text(function (d) { return d.value; });
-
-  return table;
+body {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  margin: auto;
+  padding-top: 40px;
+  position: relative;
+  width: 960px;
 }
 
-// render the table
-var peopleTable = tabulate(data, ["Jaar", "Euro"]);
-	peopleTable.selectAll("tbody tr") 
-           .sort(function(a, b) {
-             return d3.descending(a.jaar, b.jaar);
-           });
-	peopleTable.selectAll("thead th")
-           .text(function(column) {
-             return column.charAt(0).toUpperCase() + column.substr(1);
-           });
+button {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+}
+
+.bullet { font: 10px sans-serif; }
+.bullet .marker { stroke: #000; stroke-width: 2px; }
+.bullet .tick line { stroke: #666; stroke-width: .5px; }
+.bullet .range.s0 { fill: #eee; }
+.bullet .range.s1 { fill: #ddd; }
+.bullet .range.s2 { fill: #ccc; }
+.bullet .measure.s0 { fill: lightsteelblue; }
+.bullet .measure.s1 { fill: steelblue; }
+.bullet .title { font-size: 14px; font-weight: bold; }
+.bullet .subtitle { fill: #999; }
+
+</style>
+<button>Update</button>
+<script src="//d3js.org/d3.v3.min.js"></script>
+<script src="bullet.js"></script>
+<script>
+
+var margin = {top: 5, right: 40, bottom: 20, left: 120},
+    width = 960 - margin.left - margin.right,
+    height = 50 - margin.top - margin.bottom;
+
+var chart = d3.bullet()
+    .width(width)
+    .height(height);
+
+d3.json("bullets.json", function(error, data) {
+  if (error) throw error;
+
+  var svg = d3.select("body").selectAll("svg")
+      .data(data)
+    .enter().append("svg")
+      .attr("class", "bullet")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+      .call(chart);
+
+  var title = svg.append("g")
+      .style("text-anchor", "end")
+      .attr("transform", "translate(-6," + height / 2 + ")");
+
+  title.append("text")
+      .attr("class", "title")
+      .text(function(d) { return d.title; });
+
+  title.append("text")
+      .attr("class", "subtitle")
+      .attr("dy", "1em")
+      .text(function(d) { return d.subtitle; });
+
+  d3.selectAll("button").on("click", function() {
+    svg.datum(randomize).call(chart.duration(1000)); // TODO automatic transition
+  });
 });
+
+function randomize(d) {
+  if (!d.randomizer) d.randomizer = randomizer(d);
+  d.ranges = d.ranges.map(d.randomizer);
+  d.markers = d.markers.map(d.randomizer);
+  d.measures = d.measures.map(d.randomizer);
+  return d;
+}
+
+function randomizer(d) {
+  var k = d3.max(d.ranges) * .2;
+  return function(d) {
+    return Math.max(0, d + k * (Math.random() - .5));
+  };
+}
+
 </script>
-</body>
